@@ -131,14 +131,18 @@ class Illustration extends Object   {
             $crop = Json::decode($this->crop);
 
             // open image
-            $image = $this->_image = Image::getImagine()->open($file->tempName);
-            $imgSize = $image->getSize();
-            $ww = $imgSize->getWidth();
-            $hh = $imgSize->getHeight();
+            try {
+                $image = $this->_image = Image::getImagine()->open($file->tempName);
+                $imgSize = $image->getSize();
+                $ww = $imgSize->getWidth();
+                $hh = $imgSize->getHeight();
+                $error = ! $this->allowTooSmall;
+                $cropSize = $this->propValue('cropSize');
 
-            $error = ! $this->allowTooSmall;
-
-            $cropSize = $this->propValue('cropSize');
+            } catch (\Imagine\Exception\RuntimeException $e) {
+                $this->_model->addError($this->attribute, "Bad file");
+                $event->isValid = false;
+            }
             
             // Apply crop, if possible
             if ($crop['w'] > 0 && $crop['h'] > 0)    {
